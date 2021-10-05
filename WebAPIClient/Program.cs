@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Net.Http.Json;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
@@ -15,7 +17,26 @@ namespace WebAPIClient
 
         static async Task Main(string[] args)
         {
-            await GetHomeLibraryBooks();
+            await GetHomeLibraryAuthors();
+
+            // nowy rekord
+            var auth = new Author
+            {
+                firstName = "Jakub",
+                lastName = "Drozd",
+                bio = ""
+            };
+
+            //wyczekanie metody
+            var postResult = await PostHomeLibraryAuthor(auth);
+            
+            //wypisanie wiadomosci status code
+            Console.WriteLine(postResult);
+
+            Console.ReadKey();
+
+            //ponowne uzyskanie autorow
+            await GetHomeLibraryAuthors();
         }
 
         /*
@@ -26,7 +47,7 @@ namespace WebAPIClient
          * client.GetSTREAMAsync(url do API) - zwraca wiadomosc jako json - do deserializacji
          * 
          */
-        private static async Task GetHomeLibraryBooks()
+        private static async Task GetHomeLibraryAuthors()
         {
             client.DefaultRequestHeaders.Accept.Clear();
 
@@ -44,6 +65,24 @@ namespace WebAPIClient
             {
                 Console.WriteLine($"{author.firstName} {author.lastName}");
             }
+        }
+
+        /*
+         * Task zwracajacy odpowiedz servera jako string - POST - dodawanie rekordu 
+         * serializacja przekazanego obiektu
+         * wyslanie calla post
+         * zapisanie z uzyskanej odpowiedzi status code'a
+         * zwrocenie status code'a
+         */
+        private static async Task<string> PostHomeLibraryAuthor(Author author)
+        {
+            var jsonOutputToSend = JsonSerializer.Serialize(author);
+
+            var response = await client.PostAsync("https://localhost:44304/api/Author", new StringContent(jsonOutputToSend, encoding: Encoding.UTF8, "application/json"));
+            //var contents = await response.Content.ReadAsStringAsync();
+            var contents = response.StatusCode.ToString();
+
+            return contents;
         }
 
         //@@ dodatkowo wiecej funkcjonalnego kodu
